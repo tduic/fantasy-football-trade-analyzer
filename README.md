@@ -21,9 +21,11 @@ The server listens on port `8080`.
 | Method | Path | Description |
 | ------ | ---- | ----------- |
 | GET | `/sleeper/user/:user` | Get a Sleeper user by username |
-| GET | `/sleeper/leagues/:username` | Get the NFL leagues for a user |
+| GET | `/sleeper/leagues/:username` | Get the user's NFL leagues for the current season (Sleeper's `league_season`) |
 | GET | `/sleeper/rosters/:leagueId` | Get all rosters in a league |
 | GET | `/sleeper/best/:position` | Get the highest-ranked player for a position |
+
+If Sleeper can't be reached or returns an error, the API answers with a JSON body `{ "error": "..." }` and status `502` (or `404` for an unknown user/resource).
 
 ## Tech Stack
 

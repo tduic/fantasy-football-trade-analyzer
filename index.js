@@ -3,24 +3,35 @@ const sleeperController = require('./sleeper/sleeperController.js');
 
 const app = express();
 
+// Send the handler's result, or a JSON error with a matching HTTP status
+// (Sleeper failures carry their own status; anything else is a 500).
+const handle = (fn) => async (req, res) => {
+    try {
+        res.send(await fn(req));
+    } catch (err) {
+        if (err.status) {
+            res.status(err.status).json({ error: err.message });
+        } else {
+            console.error(err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+};
+
 // Route handling
-app.get('/sleeper/user/:user', async (req, res) => {
-    res.send(await sleeperController.getUser(req.params.user));
-});
+app.get('/sleeper/user/:user', handle((req) => sleeperController.getUser(req.params.user)));
 
-app.get('/sleeper/leagues/:username', async (req, res) => {
+app.get('/sleeper/leagues/:username', handle(async (req) => {
     const user = await sleeperController.getUser(req.params.username);
-    const userId = await user.user_id;
-    res.send(await sleeperController.getLeaguesByUserId(userId));
-});
+    if (!user || !user.user_id) {
+        throw new sleeperController.SleeperApiError(`Sleeper user "${req.params.username}" not found`, 404);
+    }
+    return sleeperController.getLeaguesByUserId(user.user_id);
+}));
 
-app.get('/sleeper/rosters/:leagueId', async (req, res) => {
-    res.send(await sleeperController.getRostersByLeagueId(req.params.leagueId));
-});
+app.get('/sleeper/rosters/:leagueId', handle((req) => sleeperController.getRostersByLeagueId(req.params.leagueId)));
 
-app.get('/sleeper/best/:position', async (req, res) => {
-    res.send(await sleeperController.getBestAtPosition(req.params.position));
-});
+app.get('/sleeper/best/:position', handle((req) => sleeperController.getBestAtPosition(req.params.position)));
 
 // Server setup (only when run directly, so tests can import the app)
 if (require.main === module) {
