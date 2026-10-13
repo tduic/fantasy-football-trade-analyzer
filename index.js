@@ -9,9 +9,9 @@ app.get('/sleeper/user/:user', async (req, res) => {
 });
 
 app.get('/sleeper/leagues/:username', async (req, res) => {
-    const user = await sleeperController.getUserByUsername(req.params.username);
+    const user = await sleeperController.getUser(req.params.username);
     const userId = await user.user_id;
-    res.send(await sleeperService.getLeaguesByUserId(userId));
+    res.send(await sleeperController.getLeaguesByUserId(userId));
 });
 
 app.get('/sleeper/rosters/:leagueId', async (req, res) => {
@@ -22,7 +22,11 @@ app.get('/sleeper/best/:position', async (req, res) => {
     res.send(await sleeperController.getBestAtPosition(req.params.position));
 });
 
-// Server setup
-app.listen(8080, () => {
-    console.log('server listening on port 8080');
-});
+// Server setup (only when run directly, so tests can import the app)
+if (require.main === module) {
+    app.listen(8080, () => {
+        console.log('server listening on port 8080');
+    });
+}
+
+module.exports = app;
